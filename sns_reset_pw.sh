@@ -35,6 +35,8 @@ USERNAME=$1
 OLD_PASSWD=$2
 USR_URL=`urlencode $USERNAME`
 PWD_URL=`urlencode $OLD_PASSWD`
+# We use five similar passwords, so that if your computer crashes
+# while doing this you can easily recover the intermediate password
 TEMP_PASSWD="${OLD_PASSWD}1 ${OLD_PASSWD}2 ${OLD_PASSWD}3 ${OLD_PASSWD}4 ${OLD_PASSWD}5"
 
 tmpdir=`mktemp -d`
