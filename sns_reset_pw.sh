@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+KEEP_TEMP="no"
+
 randpw(){ < /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c${1:-13} | sed s/^/1/ | sed s/$/aA/;}
 
 urlencode() {
@@ -38,8 +40,11 @@ TEMP_PASSWD="${OLD_PASSWD}1 ${OLD_PASSWD}2 ${OLD_PASSWD}3 ${OLD_PASSWD}4 ${OLD_P
 tmpdir=`mktemp -d`
 
 cleanup() {
-    #rm -rf $tmpdir
-    echo "Temp dir was left in $tmpdir"
+    if [ "$KEEP_TEMP" == "no" ] ; then
+        rm -rf $tmpdir
+    else
+        echo "Temp dir was left in $tmpdir"
+    fi
 }
 
 trap cleanup EXIT
@@ -50,8 +55,8 @@ do_change_pw() {
     asdcsrf=`grep adscsrf $tmpdir/login_cookies.txt | cut -f 7`
     out=`mktemp -p $tmpdir`
     wget --load-cookies $tmpdir/login_cookies.txt --post-data="oldPassword=$urlencoded_old&newPassword=$urlencoded_new&confirmPassword=$urlencoded_new&adscsrf=$asdcsrf&AD=enable&OtherPlatforms=enable&OK=%C2%A0OK+%C2%A0" "https://password.sns.it/SelfChangePassword.do?selectedTab=ChangePwd" -O $out -o /dev/null
-    sz=`du -s $out | cut -f 1`
-    return `[ $sz -le 90 ]; echo $?`
+    grep '.*<td>.*Your password has been changed successfully.*</td>.*' "$out" > /dev/null
+    return `echo $?`
 }
 
 wget --save-cookie $tmpdir/initial_cookies.txt --keep-session-cookies https://password.sns.it/showLogin.cc -O /dev/null -o /dev/null
