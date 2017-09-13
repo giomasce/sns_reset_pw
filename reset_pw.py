@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+# Debian forces TLS 1.2 and the maximum version supported by
+# password.sns.it is 1.0; the trick is to fake an unencrypted request
+# routed through socat on a sufficiently old computer. For example:
+# ssh soyuz -L2204:127.0.0.1:2204 socat tcp-listen:2204,fork openssl:password.sns.it:443,verify=0
+
 import sys
 import requests
 
@@ -11,6 +16,9 @@ HEADERS = {
     'Host': HOST,
 }
 
+# We explicitly set the cookie header, because all cookies are set for
+# the domain password.sns.it and we think we are connecting to
+# localhost
 def headers(session):
     return {**HEADERS, **{"Cookie": "; ".join(["{}={}".format(k, v) for (k, v) in session.cookies.items()])}}
 
